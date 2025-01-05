@@ -1,0 +1,81 @@
+import cv2
+import face_recognition
+import numpy as np  # Ensure this line is included
+
+known_face_encodings = []
+known_face_names = []
+
+# Load images and ensure you have valid encodings
+known_person1_image = face_recognition.load_image_file(r"C:\Users\Priti\Desktop\Python\priti.jpeg")
+known_person1_encoding = face_recognition.face_encodings(known_person1_image)
+if known_person1_encoding:
+    known_face_encodings.append(known_person1_encoding[0])
+    known_face_names.append("Priti")
+
+known_person2_image = face_recognition.load_image_file(r"C:\Users\Priti\Desktop\Python\salman.jpeg")
+known_person2_encoding = face_recognition.face_encodings(known_person2_image)
+if known_person2_encoding:
+    known_face_encodings.append(known_person2_encoding[0])
+    known_face_names.append("Salman")
+
+known_person3_image = face_recognition.load_image_file(r"C:\Users\Priti\Desktop\Python\sk.jpeg")
+known_person3_encoding = face_recognition.face_encodings(known_person3_image)
+if known_person3_encoding:
+    known_face_encodings.append(known_person3_encoding[0])
+    known_face_names.append("SK")
+
+known_person4_image = face_recognition.load_image_file(r"C:\Users\Priti\Desktop\Python\rashmi.jpg")
+known_person4_encoding = face_recognition.face_encodings(known_person4_image)
+if known_person4_encoding:
+    known_face_encodings.append(known_person4_encoding[0])
+    known_face_names.append("Rashmi")
+
+known_person5_image = face_recognition.load_image_file(r"C:\Users\Priti\Desktop\Python\Ansh.jpeg")
+known_person5_encoding = face_recognition.face_encodings(known_person5_image)
+if known_person5_encoding:
+    known_face_encodings.append(known_person5_encoding[0])
+    known_face_names.append("Ansh")
+
+
+# Debug: Print types of encodings and names
+print(f"Types in known_face_encodings: {[type(encoding) for encoding in known_face_encodings]}")
+print(f"Known face names: {known_face_names}")
+
+video_capture = cv2.VideoCapture(0)
+
+while True:
+    ret, frame = video_capture.read()
+    if not ret:
+        print("Failed to capture video frame.")
+        break
+
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+    face_locations = face_recognition.face_locations(rgb_frame)
+
+    if not face_locations:
+        print("No faces detected in the current frame.")
+        continue  # Skip this iteration if no faces are detected
+
+    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+
+    for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+        if isinstance(face_encoding, np.ndarray):
+            print(f"Shape of current face_encoding: {face_encoding.shape}")
+
+        matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        name = "unknown"
+
+        if True in matches:
+            first_match_index = matches.index(True)
+            if first_match_index < len(known_face_names):  # Safety check
+                name = known_face_names[first_match_index]
+
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+        cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+
+    cv2.imshow("Video", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+video_capture.release()
+cv2.destroyAllWindows()
